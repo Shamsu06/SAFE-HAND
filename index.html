@@ -1,29 +1,1645 @@
 <!DOCTYPE html>
-<html lang="ml">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SAFE HAND Login Page</title>
-    <style>
-        /* ഫ്രെയിം സ്ക്രീൻ മുഴുവൻ വരുന്ന രീതിയിൽ സെറ്റ് ചെയ്യുന്നു */
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-        }
-    </style>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+   
+    body { background-color: #f0f3f5; color: #333; display: flex; flex-direction: column; align-items: center; min-height: 100vh; position: relative; padding-top: 60px; }
+   
+    .loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
+    .spinner { width: 45px; height: 45px; border: 5px solid #e2e8f0; border-top: 5px solid #00796b; border-radius: 50%; animation: spin 1s linear infinite; }
+    .loader-text { margin-top: 12px; font-size: 14px; font-weight: bold; color: #00796b; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* ഹെഡർ സംരക്ഷിക്കാൻ ID ഉപയോഗിച്ചുള്ള പുതിയ സ്റ്റൈൽ */
+    #mainAppHeader {
+      width: 100% !important;
+      background: #A9D08E !important;
+      padding: 0px 8px !important;
+      height: 60px !important;
+      box-sizing: border-box !important;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      z-index: 99999 !important;
+    }
+
+    .header-container { width: 100%;  max-width: 480px;  margin: 0 auto;  height: 100%; display: flex;  align-items: center;  justify-content: space-between; }
+    .header-left {  display: flex;  align-items: center;  min-width: 0;  flex-shrink: 1;  height: 100%; }
+
+    .logo { width: 70px; height: 50px; margin-right: 6px; flex-shrink: 0; object-fit: contain; }
+   
+    .main-title { font-size: 18px; font-weight: bold; color: #355222; line-height: 1.2; }
+    .tagline { font-size: 9px; font-weight: 600; white-space: nowrap; margin-top: 2px; }
+    .ss-text { color: #355222; }
+    .pipe-text { color: red; margin: 0 2px; }
+    .sf-text { color: #BF8F00; }
+
+    .signup-container { text-align: right; margin-top: 12px; }
+
+    #signUpBtn { color: #00796b; text-decoration: none; font-weight: bold; font-size: 13px; }
+    #signUpBtn:hover { text-decoration: underline; }
+
+    .update-key-btn {
+      display: none; background: #355222; color: white; border: none; padding: 6px 12px; border-radius: 20px; font-size: 11px;
+    font-weight: bold; cursor: pointer; white-space: nowrap; width: max-content !important;
+    }
+
+    .container { width: 100%; max-width: 480px; padding: 12px; }
+    .card { background: #fff; padding: 20px 15px; border-radius: 12px; box-shadow: 0 3px 10px rgba(0,0,0,0.06); margin-bottom: 15px; border: 1px solid #e2e8f0; }
+    h2 { font-size: 16px; text-align: center; margin-bottom: 15px; color: #4a5568; text-transform: uppercase; }
+   
+    .form-group { margin-bottom: 12px; }
+    label { display: block; font-size: 12px; margin-bottom: 4px; color: #4a5568; font-weight: 600; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 14px; outline: none; }
+    button { width: 100%; padding: 12px; background: #00796b; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; }
+    .error { color: red; font-size: 12px; text-align: center; margin-top: 8px; display: none; }
+   
+    .closed-banner { display: none; background: #fff5f5; border: 1px solid #feb2b2; color: #c53030; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 14px; margin-top: 15px; }
+
+    #dashboard, #loanWizardCard, #loanResultCard { display: none; }
+    .bank-status-title { font-size: 15px; font-weight: bold; color: #004d40; text-align: center; margin-bottom: 12px; }
+    .total-balance-box { background: #edf2f7; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border: 1px solid #e2e8f0; }
+    .total-balance-box .label { font-size: 13px; font-weight: 600; color: #4a5568; }
+    .total-balance-box .amount { font-size: 18px; font-weight: bold; color: #00796b; text-align: center; flex-grow: 1; }
+   
+    .row-two-col { display: flex; gap: 8px; }
+    .sub-box { flex: 1; background: #fff; padding: 8px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0; }
+    .sub-box .label { font-size: 10px; color: #718096; font-weight: 600; }
+    .sub-box .amount { font-size: 13px; font-weight: bold; color: #2d3748; margin-top: 4px; }
+
+    .action-tabs { display: flex; justify-content: space-between; margin: 12px 0; gap: 10px; }
+    .tab-btn { flex: 1; background: #fff; border: 1px solid #00796b; padding: 8px; text-align: center; border-radius: 6px; font-size: 12px; font-weight: bold; color: #00796b; cursor: pointer; }
+
+    .profile-internal-card { border: 1px solid #cbd5e0; padding: 12px; border-radius: 10px; background: #f8fafc; margin-bottom: 15px; position: relative; }
+    .welcome-lbl { font-size: 10px; color: #a0aec0; font-weight: bold; }
+    .p-name { font-size: 16px; font-weight: bold; color: #1a202c; margin-top: 2px; }
+    .p-id { font-size: 12px; color: #4a5568; margin-top: 2px; }
+    .p-status { display: inline-block; background: #d4edda; color: #155724; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; margin-left: 8px; vertical-align: middle; }
+    .p-status.closed-badge { background: #fed7d7; color: #9b2c2c; }
+   
+    .profile-buttons { position: absolute; right: 12px; top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .circle-btn { background: #00796b; color: white; padding: 5px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; text-decoration: none; text-align: center; }
+    .circle-btn.blue { background: #2b6cb0; }
+
+    .grid-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+    .grid-box { background: #fff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; text-align: center; }
+    .grid-box .lbl { font-size: 11px; color: #718096; font-weight: 500; }
+    .grid-box .val { font-size: 14px; font-weight: bold; color: #2d3748; margin-top: 3px; }
+    .text-red { color: #e53e3e !important; }
+
+    .long-box { background: #fff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; text-align: center; margin-top: 10px; font-size: 12px; font-weight: 600; display: none; }
+    .history-btn { background: #4a5568; color: white; border: none; padding: 8px; border-radius: 6px; font-size: 12px; font-weight: bold; width: 100%; margin-top: 8px; cursor: pointer; }
+
+    .search-wrapper { margin: 15px 0 8px 0; }
+    .search-input { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px; outline: none; background: #fff; }
+    .other-section-title { font-size: 14px; font-weight: bold; color: #4a5568; margin-bottom: 5px; }
+    .member-summary-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; }
+    .m-title-row { display: flex; justify-content: space-between; align-items: center; }
+    .m-name { font-size: 14px; font-weight: bold; color: #2d3748; }
+    .m-dist { font-size: 11px; color: #718096; margin-top: 2px; }
+    .m-status { background: #d4edda; color: #155724; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+    .m-status.closed { background: #fed7d7; color: #9b2c2c; }
+    .m-status.inactive { background: #fff3cd; color: #856404; }
+    .m-details-expand { display: none; margin-top: 10px; border-top: 1px dashed #e2e8f0; padding-top: 10px; }
+    .inline-closed-msg { background: #fff5f5; color: #c53030; padding: 10px; border-radius: 6px; text-align: center; font-size: 12px; font-weight: bold; margin-bottom: 8px; border: 1px solid #feb2b2; }
+
+    /* Modal Styling */
+    .modal { display: none; position: fixed; z-index: 100000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; padding: 15px; }
+    .modal-content { background: white; padding: 20px; border-radius: 12px; width: 100%; max-width: 410px; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 16px; color: #2d3748; border-bottom: 2px solid #edf2f7; padding-bottom: 12px; margin-bottom: 15px; }
+
+    .close-modal {
+      display: flex; align-items: center; justify-content: center; width: 20px; height: 20px;
+      border: 1px solid #e53e3e; border-radius: 4px; cursor: pointer; color: white;            
+      font-size: 20px; background: #e53e3e; font-weight: bold; transition: background 0.2s;
+    }
+    .close-modal:hover { background: #c53030; border-color: #c53030; }
+   
+    .hist-item { padding: 12px; border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; margin-bottom: 6px; border-radius: 8px; }
+    .hist-left { display: flex; flex-direction: column; gap: 3px; }
+    .hist-date { font-size: 13px; font-weight: bold; color: #2d3748; }
+    .hist-cat { font-size: 11px; color: #718096; text-transform: uppercase; background: #e2e8f0; padding: 1px 6px; border-radius: 4px; display: inline-block; }
+    .hist-cat.cat-red { background: #fed7d7 !important; color: #c53030 !important; font-weight: bold; }
+    .hist-amt { font-size: 15px; font-weight: bold; color: #2d3748; }
+    .hist-amt.amt-red { color: #e53e3e !important; }
+
+    .wizard-step { display: none; }
+    .wizard-step.active { display: block; }
+    .wiz-info { background: #ebf8ff; color: #2b6cb0; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: 600; margin-bottom: 12px; border: 1px solid #bee3f8; }
+    .btn-row { display: flex; gap: 10px; margin-top: 15px; }
+    .btn-secondary { background: #718096 !important; }
+    .btn-verify { background: #2b6cb0 !important; }
+
+    .pdf-page { background: white; padding: 25px; border: 1px solid #cbd5e0; border-radius: 8px; margin-top: 10px; color: #000; }
+    .pdf-header-title { font-size: 22px; font-weight: bold; color: #355222; text-align: center; }
+    .pdf-subject { text-align: center; font-size: 15px; font-weight: bold; color: red; margin: 15px 0; text-transform: uppercase; border-bottom: 2px solid #333; padding-bottom: 5px; }
+    .pdf-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .pdf-table td { padding: 8px; border: 1px solid #cbd5e0; font-size: 12px; }
+    .pdf-table td.label-td { font-weight: bold; background: #f7fafc; width: 40%; }
+    .pdf-status-msg { background: #fff5f5; border: 1px dashed red; padding: 12px; text-align: center; font-weight: bold; font-size: 13px; color: #c53030; margin-top: 15px; border-radius: 6px; }
+  </style>
 </head>
 <body>
 
-    <iframe src="https://script.google.com/macros/s/AKfycbxTcMpoQYGhbAIpbeAa2U3XCeAPavgUj6UGWXHFh6MLmVo1OWqHUrpqKJ2CDcTfHqBg/exec"></iframe>
+  <div class="loader-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loader-text" id="loaderText">Fetching Details...</div>
+  </div>
 
+  <!-- 1. MAIN WEB HEADER -->
+  <div id="mainAppHeader">
+    <div class="header-container">
+      <div class="header-left">
+        <img src="https://i.ibb.co/V05KYM2J/Safe-Hand.png" class="logo">
+        <div class="brand-info">
+          <div class="main-title">Safe Hand</div>
+          <div class="tagline">
+            <span class="ss-text">Secure Savings</span>
+            <span class="pipe-text">|</span>
+            <span class="sf-text">Stronger Friendship</span>
+          </div>
+        </div>
+      </div>
+      <button class="update-key-btn" id="btnHeaderUpdateKey" onclick="openUpdateKeyModal()">Update 🔑</button>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <div class="card" id="loginCard">
+      <h2>MEMBER LOGIN</h2>
+      <div class="form-group"><label>MEMBER ID</label><input type="text" id="memberId" placeholder="Enter Member ID"></div>
+      <div class="form-group"><label>LOGIN KEY</label><input type="password" id="loginKey" placeholder="Enter Login Key"></div>
+      <button onclick="login()" style="background: #355222; color: white;">LOGIN</button>
+      <div class="error" id="loginError"></div>
+      <div class="closed-banner" id="loginClosedBanner"></div>
+    </div>
+
+    <div id="loginOptionsHeader" style="width: 100%; max-width: 420px; margin: 100px auto; background: #355222; padding: 10px 20px; border-radius: 50px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box;">
+      <span style="color: white; font-size: 13px; font-weight: bold; cursor: pointer; border: 1.5px solid white; padding: 5px 15px; border-radius: 50px; display: inline-flex; align-items: center;" onclick="openByelawModal()">📜 Byelaw</span>
+     <a id="signUpBtn" href="javascript:void(0)" onclick="openRegistrationModal()" style="background: white; color: #355222; padding: 6px 20px; border-radius: 50px; font-size: 13px; font-weight: bold; text-decoration: none; cursor: pointer;">Sign up</a>
+</div>
+
+    <div id="dashboard">
+  <div class="card" id="mainStatusCard">
+    <div class="bank-status-title">BANK STATUS</div>
+    
+    <div class="total-balance-box">
+      <span class="label">Total Balance</span>
+      <span class="amount" id="lblBankBalance">0.00</span>
+    </div>
+    
+    <div class="row-two-col">
+      <!-- ഇവിടെയാണ് Outstanding Loans sub-box നൽകേണ്ടത് -->
+      <div class="sub-box" onclick="openLoanDetailsModal()" style="cursor: pointer;" title="Click to view loan details">
+        <div class="label">Outstanding Loans</div>
+        <div class="amount" id="lblBankOutstanding">0.00</div>
+      </div>
+      
+      <div class="sub-box">
+        <div class="label">Net Bank Interest</div>
+        <div class="amount" id="lblBankInterest">0.00</div>
+      </div>
+    </div>
+    </div>
+    
+
+
+      <div class="action-tabs">
+        <div class="tab-btn" onclick="initiateLoanCheck()" style="width: 100%; font-size: 14px; padding: 6px;">📝 Apply for Loan</div>
+      </div>
+
+      <div class="card">
+        <div class="profile-internal-card">
+          <div class="welcome-lbl">WELCOME</div>
+          <div class="p-name" id="uName">Member Name</div>
+          <div class="p-id">ID: <span id="uId">M000</span> <span class="p-status" id="uStatus">Active</span></div>
+          <div class="profile-buttons">
+  <a href="#" id="btnProfile" class="circle-btn" onclick="event.preventDefault(); openProfile();">🙎‍♂️ Profile</a>
+           <a href="#" id="btnGDrive" target="_blank" class="circle-btn blue">🧾 A/C Stmt</a>
+          </div>
+        </div>
+        <div class="grid-2x2">
+          <div class="grid-box"><div class="lbl">Savings</div><div class="val" id="uSavings">0.00</div></div>
+          <div class="grid-box"><div class="lbl">Net Asset</div><div class="val" id="uAsset">0.00</div></div>
+          <div class="grid-box"><div class="lbl">Otsy Loan</div><div class="val" id="uOtsy">0.00</div></div>
+          <div class="grid-box"><div class="lbl">Arrears</div><div class="val" id="uArrears">0.00</div></div>
+        </div>
+        <div class="long-box" id="uLoanCloseRow">Estimated Loan Closing Date: <span id="uLoanClose" style="color: #e53e3e;">-</span></div>
+        <button class="history-btn" onclick="openHistoryPopup(null)">History</button>
+      </div>
+
+      <div class="search-wrapper">
+        <div class="other-section-title">Members Directory</div>
+        <input type="text" class="search-input" id="txtSearch" onkeyup="filterMembers()" placeholder="Search members...">
+      </div>
+      <div id="otherMembersList"></div>
+    </div>
+
+    <div class="card" id="loanWizardCard">
+      <h2 id="wizTitle">Loan Request (Step 1 of 3)</h2>
+     
+      <div class="wizard-step active" id="step1">
+        <div class="form-group">
+          <label>Loan Type</label>
+          <select id="wType" onchange="onLoanTypeChange()">
+            <option value="" selected disabled>Selected Type of Loan</option>
+            <option value="Personal">Personal Loan</option>
+            <option value="Emergency">Emergency Loan</option>
+            <option value="Special">Special Loan</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Requested Amount</label>
+          <input type="number" id="wAmount" placeholder="Enter Amount">
+        </div>
+       
+        <div class="form-group">
+          <label>Required Date (തുക എന്ന് ആവശ്യമുണ്ട്)</label>
+          <input type="date" id="wReqDate">
+        </div>
+       
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="exitWizard()">Cancel</button>
+          <button onclick="processStep1()">Next Step</button>
+        </div>
+      </div>
+
+      <div class="wizard-step" id="step2">
+        <div id="guarantorNotice" class="wiz-info"></div>
+       
+        <div class="form-group" id="guarantorFormGroup">
+          <label>Guarantor Member ID (ജാമ്യക്കാരന്റെ ID)</label>
+          <input type="text" id="wGuarantorId" placeholder="e.g. SH000">
+          <button class="btn-verify" style="margin-top:5px; padding:6px; font-size:12px;" onclick="verifyGuarantorBtn()">Verify Guarantor</button>
+          <div id="guarantorStatusText" style="font-size:12px; font-weight:bold; margin-top:4px;"></div>
+        </div>
+       
+        <div class="form-group">
+          <label>Tenure (തിരിച്ചടവ് കാലാവധി - മാസങ്ങൾ)</label>
+          <input type="number" id="wTenure" placeholder="ഉദാഹരണത്തിന്: 12">
+        </div>
+       
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="goBackStep(1)">Back</button>
+          <button onclick="processStep2()">Next Step</button>
+        </div>
+      </div>
+
+      <div class="wizard-step" id="step3">
+        <div class="wiz-info">നിങ്ങളുടെ തുക ട്രാൻസ്ഫർ ചെയ്യേണ്ട ബാങ്ക് വിവരങ്ങൾ താഴെ കാണിച്ചിരിക്കുന്നു. മാറ്റങ്ങൾ വരുത്തണമെങ്കിൽ എഡിറ്റ് ചെയ്യാം.</div>
+        <div class="form-group"><label>Bank Name</label><input type="text" id="wBankName" disabled></div>
+        <div class="form-group"><label>Account Holder Name</label><input type="text" id="wAccHolder" disabled></div>
+        <div class="form-group"><label>Account Number</label><input type="text" id="wAccNo" disabled></div>
+        <div class="form-group"><label>IFSC Code</label><input type="text" id="wIfsc" disabled></div>
+       
+        <div class="btn-row" id="bankViewButtons">
+          <button class="btn-verify" onclick="enableBankEdit()">Edit Bank Details</button>
+        </div>
+        <div class="btn-row" id="bankEditButtons" style="display:none;">
+          <button class="btn-secondary" onclick="cancelBankEdit()">Cancel Edit</button>
+        </div>
+        <hr style="margin:15px 0; border:0; border-top:1px solid #e2e8f0;">
+       
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="goBackStep(2)">Back</button>
+          <button style="background:#00796b;" onclick="finalSubmitLoan()">SUBMIT APPLICATION</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="loanResultCard" style="display: none; max-width: 450px; margin: 10px auto; padding: 0; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; overflow: hidden; font-family: sans-serif;">
+      <div style="background: #28a745; color: white; padding: 15px; text-align: center;">
+        <h3 style="margin: 0; font-size: 18px; font-weight: bold; letter-spacing: 0.5px;">അപേക്ഷ വിജയകരം!</h3>
+      </div>
+      <div style="padding: 20px; text-align: center;">
+        <div style="font-size: 45px; color: #28a745; margin-bottom: 10px;">✓</div>
+        <p style="font-size: 13px; color: #4a5568; margin-bottom: 15px; line-height: 1.5;" id="resStatusMsg">
+          നിങ്ങളുടെ ലോൺ അപേക്ഷ വിജയകരമായി സമർപ്പിച്ചിരിക്കുന്നു.
+        </p>
+        <div style="background: #f7fafc; padding: 12px; border-radius: 8px; text-align: left; font-size: 13px; color: #2d3748;">
+          <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #edf2f7;">
+            <span style="color: #718096;">Application No:</span>
+            <span style="font-weight: bold;" id="resAppNo">-</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #edf2f7;">
+            <span style="color: #718096;">Submitted Date & Time:</span>
+            <span style="font-weight: bold;" id="resDate">-</span>
+          </div>
+          <div style="margin-top: 10px; padding-top: 6px; color: #28a745; font-weight: bold; font-size: 12px;">
+            🏦 Bank Account Details
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #edf2f7;">
+            <span style="color: #718096;">Bank Name:</span>
+            <span style="font-weight: bold;" id="resBankName">-</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+            <span style="color: #718096;">Account No:</span>
+            <span style="font-weight: bold;" id="resAccNo">-</span>
+          </div>
+        </div>
+        <button type="button" onclick="downloadApplicationPDF()" style="background: #2b6cb0; color: white; font-weight: bold; margin-top: 15px; width: 100%; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+          📥 Download Application PDF
+        </button>
+        <button type="button" onclick="returnToDashboardFromLoan()" style="background: #edf2f7; color: #4a5568; margin-top: 8px; width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;">
+          Back to Dashboard
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. PRINT PDF AREA HEADER -->
+    <div id="pdfPrintArea" style="display: none; font-family: 'Segoe UI', Helvetica, Arial, sans-serif; padding: 30px; color: #333; background: #fff; max-width: 800px; margin: 0 auto;">
+      <div style="display: flex; align-items: center; justify-content: center; background: #A9D08E; padding: 15px; border-radius: 8px 8px 0 0; margin-bottom: 0;">
+        <img src="https://i.ibb.co/V05KYM2J/Safe-Hand.png" style="width: 55px; height: 55px; margin-right: 15px; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1));">
+        <div style="text-align: left;">
+          <div style="font-size: 35px; font-weight: bold; color: #355222; line-height: 1.1; letter-spacing: 0.5px;">Safe Hand</div>
+          <div style="font-size: 18px; font-weight: 600; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+            <span style="color: #355222;">Secure Savings</span>
+            <span style="color: red; margin: 0 4px;">|</span>
+            <span style="color: #BF8F00;">Stronger Friendship</span>
+          </div>
+        </div>
+      </div>
+     
+      <div style="height: 4px; background: #355222; width: 100%; margin: 0 auto 20px auto; border-radius: 0 0 8px 8px;"></div>
+     
+      <div style="text-align:center; font-size:16px; font-weight:bold; color:#355222; margin-bottom:25px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #355222; padding-bottom: 6px;">
+        Loan Application Form
+      </div>
+ 
+      <h4 style="color:#355222; margin: 15px 0 6px 0; border-bottom: 1px solid #cbd5e0; padding-bottom:4px; font-size:12px; text-transform: uppercase;">1. Application Details</h4>
+      <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:15px;">
+        <tr><td style="padding:8px; width:40%; font-weight:bold; background:#f7fafc; border: 1px solid #cbd5e0;">Application Number</td><td id="pAppNo" style="padding:8px; font-weight:bold; color:#355222; border: 1px solid #cbd5e0;">-</td></tr>
+        <tr><td style="padding:8px; font-weight:bold; background:#f7fafc; border: 1px solid #cbd5e0;">Submitted Date & Time</td><td id="pDate" style="padding:8px; border: 1px solid #cbd5e0;">-</td></tr>
+        <tr><td style="padding:8px; font-weight:bold; background:#f7fafc; border: 1px solid #cbd5e0;">Application Status</td><td id="pStatusMessage" style="padding:8px; font-weight:bold; border: 1px solid #cbd5e0;">-</td></tr>
+      </table>
+
+      <h4 style="color:#355222; margin: 15px 0 6px 0; border-bottom: 1px solid #cbd5e0; padding-bottom:4px; font-size:12px; text-transform: uppercase;">2. Applicant & Bank Details</h4>
+      <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:15px;">
+        <tr><td style="padding:8px; width:40%; font-weight:bold; background:#f7fafc; border: 1px solid #cbd5e0;">Applicant ID</td><td id="pId" style="padding:8px; border: 1px solid #cbd5e0;">-</td></tr>
+        <tr><td style="padding:8px; font-weight:bold; background:#f7fafc; border: 1px solid #cbd5e0;">Applicant Name</td><td id="pName" style="padding:8px; border: 1px solid #cbd5e0;">-</td></tr>
+        <tr><td style="padding:8px; font-weight:bold; background:#f7fafc; border: 1px solid #cbd5e0;">Bank Account Details</td><td id="pBank" style="padding:8px; white-space: pre-line; line-height: 1.4; border: 1px solid #cbd5e0;">-</td></tr>
+      </table>
+     
+      <h4 style="color:#355222; margin: 15px 0 6px 0; border-bottom: 1px solid #cbd5e0; padding-bottom:4px; font-size:12px; text-transform: uppercase;">3. Loan & Repayment Terms</h4>
+      <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:15px;">
+        <tr><td style="padding:8px; width:40%; font-weight:bold; background:#f7fafc; border: 1px solid #cbd5e0;">Loan Type</td><td id="pType" style="padding:8px; border: 1px solid #cbd5e0;">-</td></tr>
+        <tr><td style="padding:8px; font-weight:bold; background:#f7fafc; border: 1px solid #cbd5e0;">Requested Amount</td><td id="pAmount" style="padding:8px; font-weight:bold; color:#c53030; border: 1px solid #cbd5e0;">-</td></tr>
+        <tr><td style="padding:8px; font-weight:bold; background:#f7fafc; border: 1px solid #cbd5e0;">Tenure (Months)</td><td id="pTenure" style="padding:8px; border: 1px solid #cbd5e0;">-</td></tr>
+        <tr><td style="padding:8px; font-weight:bold; background:#f7fafc; border: 1px solid #cbd5e0;">Approx. Monthly EMI</td><td id="pEmi" style="padding:8px; font-weight:bold; color:#2f855a; border: 1px solid #cbd5e0;">-</td></tr>
+        <tr><td style="padding:8px; font-weight:bold; background:#f7fafc; border: 1px solid #cbd5e0;">Required Date</td><td id="pReqDate" style="padding:8px; border: 1px solid #cbd5e0;">-</td></tr>
+        <tr><td style="padding:8px; font-weight:bold; background:#f7fafc; border: 1px solid #cbd5e0;">Reason for Loan</td><td id="pReason" style="padding:8px; border: 1px solid #cbd5e0;">-</td></tr>
+      </table>
+
+      <h4 style="color:#355222; margin: 15px 0 6px 0; border-bottom: 1px solid #cbd5e0; padding-bottom:4px; font-size:12px; text-transform: uppercase;">4. Guarantor Details</h4>
+      <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:25px;">
+        <tr><td style="padding:8px; width:40%; font-weight:bold; background:#f7fafc; border: 1px solid #cbd5e0;">Guarantor ID & Name</td><td id="pGuarantor" style="padding:8px; border: 1px solid #cbd5e0;">-</td></tr>
+      </table>
+
+      <div style="font-size:10px; color:#4a5568; text-align:justify; line-height:1.5; background:#f8fafc; padding:12px; border:1px dashed #cbd5e0; border-radius:6px; margin-bottom:40px;">
+        <b>Declaration (സാക്ഷ്യപ്പെടുത്തൽ):</b> ഈ കൂട്ടായ്മയിലെ വ്യവസ്ഥകൾ ഞാൻ പൂർണ്ണമായി മനസ്സിലാക്കുകയും അംഗീകരിക്കുകയും ചെയ്യുന്നു. ഈ അപേക്ഷയിൽ നൽകിയിട്ടുള്ള വിവരങ്ങൾ തികച്ചും സത്യസന്ധമാണ്. ലോൺ അനുവദിക്കുന്ന പക്ഷം കൃത്യമായ തവണകളായി തുക തിരികെ അടക്കാമെന്ന് ഞാൻ ഉറപ്പു നൽകുന്നു.
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="historyModal">
+    <div class="modal-content">
+      <div class="modal-header"><span>Transaction History</span><span class="close-modal" onclick="closeHistoryPopup()">&times;</span></div>
+      <div id="historyList">Loading...</div>
+    </div>
+  </div>
+
+  <div class="modal" id="updateKeyModal">
+    <div class="modal-content">
+      <div class="modal-header"><span>Update Login Key</span><span class="close-modal" onclick="closeUpdateKeyModal()">&times;</span></div>
+      <div class="form-group"><label>NEW LOGIN KEY</label><input type="password" id="txtNewKey" placeholder="Enter New Key"></div>
+      <button onclick="submitNewKey()">UPDATE KEY</button>
+    </div>
+  </div>
+
+  <div class="modal" id="customAlertModal" style="z-index: 1000000;">
+    <div class="modal-content" style="text-align: center; max-width: 350px;">
+      <div id="customAlertMessage" style="font-size: 14px; font-weight: 500; color: #2d3748; margin-bottom: 20px; line-height: 1.5;"></div>
+      <button onclick="closeCustomAlert()" style="background: #00796b; color: white; padding: 10px; font-size: 14px; border: none; border-radius: 6px; width: 100%; font-weight: bold; cursor: pointer;">OK</button>
+    </div>
+  </div>
+
+  <div class="modal" id="customConfirmModal" style="z-index: 10000000; display: none; position: fixed; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
+    <div class="modal-content" style="text-align: center; max-width: 380px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+      <div id="customConfirmMessage" style="font-size: 15px; font-weight: 500; color: #2d3748; margin-bottom: 25px; line-height: 1.6;"></div>
+      <div style="display: flex; gap: 10px;">
+        <button onclick="closeCustomConfirm(false)" style="flex: 1; background: #718096; color: white; padding: 10px; font-size: 14px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">No</button>
+        <button onclick="closeCustomConfirm(true)" style="flex: 1; background: #00796b; color: white; padding: 10px; font-size: 14px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Yes</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="guarantorModal" style="display: none; position: fixed; z-index: 999999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(3px); align-items: center; justify-content: center;">
+    <div style="background-color: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border-top: 5px solid #dd6b20;">
+      <div style="font-size: 40px; margin-bottom: 10px;">⚠️</div>
+      <h3 style="margin: 0 0 15px 0; color: #dd6b20; font-size: 18px; font-weight: bold;">Loan Guarantor Request</h3>
+      <div id="guarantorModalContent" style="font-size: 14px; color: #4a5568; margin-bottom: 25px; line-height: 1.6; text-align: left; background: #f7fafc; padding: 15px; border-radius: 8px; border: 1px solid #edf2f7;"></div>
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button id="btnModalReject" style="flex: 1; background-color: #e53e3e; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;" onclick="submitGuarantorResponse('Reject')">Reject</button>
+        <button id="btnModalAccept" style="flex: 1; background-color: #38a169; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;" onclick="submitGuarantorResponse('Approve')">Confirm & Sign</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BYELAW POPUP BOX -->
+  <div id="byelawPopup" style="display: none; position: fixed; z-index: 3000000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); font-family: 'Segoe UI', sans-serif;">
+    <div style="background-color: #fff; margin: 2vh auto; width: 95%; max-width: 500px; height: 96vh; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; overflow: hidden;">
+     
+      <div style="background-color: #A9D08E; padding: 15px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+        <h2 style="font-size: 14px; color: #355222; margin: 0;">SAFE HAND - BYELAW - ( നിയമാവലി ) </h2>
+        <span style="font-size: 26px; font-weight: bold; color: #355222; cursor: pointer; padding: 0 10px;" onclick="closeByelawModal()">&times;</span>
+      </div>
+     
+      <div id="byelawContent" style="padding: 20px; flex-grow: 1; overflow-y: auto; font-size: 14px; line-height: 1.7; color: #333; background-color: #fff;">
+        <p style="color: #666; text-align: center; margin-top: 20px;">ലോഡ് ചെയ്യുന്നു... ദയവായി കാത്തിരിക്കുക...</p>
+      </div>
+     
+      <div style="background-color: #f4f4f4; padding: 12px 20px; text-align: right; border-top: 1px solid #ddd; flex-shrink: 0;">
+        <button type="button" style="background-color: #355222; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;" onclick="closeByelawModal()">വായിച്ചു കഴിഞ്ഞു</button>
+      </div>
+    </div>
+  </div>
+
+
+<!-- REGISTRATION POPUP BOX -->
+<div id="registrationPopup" style="display: none; position: fixed; z-index: 2000000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); font-family: 'Segoe UI', sans-serif;">
+  <div style="background-color: #fff; margin: 2vh auto; width: 95%; max-width: 800px; height: 96vh; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; overflow: hidden;">
+    
+    <!-- പുതിയ ലോഗോ ഹെഡിങ്ങും ക്ലോസ് ബട്ടണും -->
+    <div style="background-color: #A9D08E; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; border-bottom: 4px solid #355222;">
+      
+      <!-- ലോഗോയും പേരും -->
+      <div style="display: flex; align-items: center;">
+        <img src="https://i.ibb.co/V05KYM2J/Safe-Hand.png" style="width: 50px; height: 50px; margin-right: 15px; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1));">
+        <div style="text-align: left;">
+          <div style="font-size: 24px; font-weight: bold; color: #355222; line-height: 1.1; letter-spacing: 0.5px;">Safe Hand</div>
+          <div style="font-size: 11px; font-weight: 600; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+            <span style="color: #355222;">Secure Savings</span>
+            <span style="color: red; margin: 0 4px;">|</span>
+            <span style="color: #BF8F00;">Stronger Friendship</span>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ക്ലോസ് ബട്ടൺ (X) -->
+      <span style="font-size: 34px; font-weight: bold; color: #355222; cursor: pointer; padding: 0 5px; line-height: 1;" onclick="closeRegistrationModal()" title="Close Form">&times;</span>
+      
+    </div>
+           <div style="text-align: center; padding: 6px; background: #355222; color: #fff; font-size: 14px; font-weight: 600;">
+    New Member Registration Form
+  </div>
+
+    
+    <div id="registrationContent" style="padding: 0; flex-grow: 1; overflow-y: auto; background-color: #f7fafc;">
+      <!-- ഇവിടെയാണ് registration.html ലോഡ് ആകുന്നത് -->
+      <p style="color: #666; text-align: center; margin-top: 50px;">ഫോം ലോഡ് ചെയ്യുന്നു... ദയവായി കാത്തിരിക്കുക...</p>
+    </div>
+    
+  </div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 99999; justify-content: center; align-items: flex-start; padding-top: 40px; overflow-y: auto; }
+  .profile-modal { background: #fff; width: 95%; max-width: 750px; border-radius: 12px; padding: 0; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.25); margin-bottom: 40px; overflow: hidden; }
+  .close-btn { position: absolute; top: 2px; right: 10px; font-size: 15px; cursor: pointer; color: #ED310C; font-weight: bold; z-index: 99; }
+
+  .close-modal {
+    display: flex; align-items: center; justify-content: center; width: 20px; height: 20px;
+    border: 1px solid #e53e3e; border-radius: 4px; cursor: pointer; color: white;            
+    font-size: 20px; background: #e53e3e; font-weight: bold; transition: background 0.2s;
+  }
+  .close-modal:hover { background: #c53030; border-color: #c53030; }
+  
+  /* PDF ഒരു പേജിൽ ഒതുക്കാൻ വേണ്ടി മാറ്റങ്ങൾ വരുത്തിയത് ഇവിടെയാണ് */
+  .pdf-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
+  .pdf-table th, .pdf-table td { padding: 7px 11px; text-align: left; border-bottom: 1px solid #e2e8f0; line-height: 1.2; }
+  .pdf-table th { background-color: #f7fafc; color: #4a5568; font-weight: 600; width: 35%; }
+  .pdf-sec-title { background: #edf2f7; color: #29411B; font-weight: bold; padding: 4px 10px; font-size: 11px; text-transform: uppercase; border-left: 4px solid #29411B; }
+  
+  .action-buttons { display: flex; gap: 10px; padding: 15px; background: #f7fafc; border-top: 1px solid #e2e8f0; }
+  .btn { flex: 1; padding: 10px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; text-align: center; }
+  .btn-edit { background: #3182ce; color: white; }
+  .btn-pdf { background: #29411B; color: white; }
+  
+  .edit-mode { display: none; padding: 25px; }
+  .edit-mode h2 { color: #29411B; text-align: center; margin-top: 0; margin-bottom: 20px; }
+  .readonly-field { background-color: #ebd5d5 !important; cursor: not-allowed; color: #5a5a5a; font-weight: bold; }
+
+  /* Overlay Design */
+  .custom-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; }
+
+  /* Loading Spinner Design */
+  .spinner { border: 6px solid #f3f3f3; border-top: 6px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  .overlay-text { margin-top: 15px; font-size: 12px; font-family: sans-serif; }
+
+  /* Toast Notification Design */
+  .toast-notification { visibility: hidden; min-width: 250px; background-color: #4CAF50; color: #fff; text-align: center; border-radius: 5px; position: fixed; z-index: 10000; left: 50%; bottom: 20px; transform: translateX(-50%); font-size: 16px; box-shadow: 0px 4px 6px rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.5s, bottom 0.5s; }
+  .toast-notification.show { visibility: visible; opacity: 1; bottom: 40px; }
+  .toast-error { background-color: #f44336 !important; }
+</style>
+
+<div id="profileModal" class="modal-overlay">
+  <div class="profile-modal">
+    <span class="close-btn" onclick="closeProfile()">&times;</span>
+    
+    <div id="viewMode">
+      
+      <div id="profilePdfPrintArea" style="font-family: 'Segoe UI', Helvetica, Arial, sans-serif; padding: 20px; color: #333; background: #fff; max-width: 800px; margin: 0 auto;">
+        
+        <div style="display: flex; align-items: center; background: #A9D08E; padding: 12px 15px; border-radius: 8px 8px 0 0; margin-bottom: 0;">
+  <img src="https://i.ibb.co/V05KYM2J/Safe-Hand.png" style="width: 60px; height: 60px; margin-right: 15px; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1));">
+  <div style="text-align: left;">
+    <div style="font-size: 22px; font-weight: bold; color: #355222; line-height: 1.1; letter-spacing: 0.5px;">Safe Hand</div>
+    <div style="font-size: 10px; font-weight: 600; margin-top: 4px; letter-spacing: 0.5px; line-height: 1;">
+      <span style="color: #355222;">Secure Savings</span>
+      <span style="color: red; margin: 0 4px;">|</span> 
+      <span style="color: #BF8F00;">Stronger Friendship</span>
+    </div>
+  </div>
+</div>
+        
+        <div style="padding: 15px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px;">
+          <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px; border-bottom: 2px solid #29411B; padding-bottom: 10px;">
+            <img id="vPhoto" src="https://via.placeholder.com/150" style="width: 90px; height: 90px; border-radius: 6px; object-fit: cover; border: 2px solid #29411B;">
+            <div>
+              <div id="vName" style="font-size: 18px; font-weight: bold; color: #2d3748;">Name</div>
+              <div style="margin-top: 3px; font-size: 11px;"><strong style="color: #29411B;">Member ID: </strong><span id="vId" style="font-weight: bold;">-</span></div>
+              <div style="margin-top: 3px; font-size: 11px;"><strong style="color: #29411B;">Join Date: </strong><span id="vJoinDate" style="font-weight: bold;">-</span></div>
+            </div>
+          </div>
+
+          <table class="pdf-table">
+            <tr><td colspan="2" class="pdf-sec-title">Personal Details</td></tr>
+            <tr><th>Date of Birth</th><td><span id="vDob">-</span></td></tr>
+            <tr><th>Mobile India</th><td><span id="vMobileind">-</span></td></tr>
+            <tr><th>Mobile UAE</th><td><span id="vMobileuae">-</span></td></tr>
+            <tr><th>Email Address</th><td><span id="vEmail">-</span></td></tr>
+
+            <tr><td colspan="2" class="pdf-sec-title">Address Details</td></tr>
+            <tr><th>House Name</th><td><span id="vHouse">-</span></td></tr>
+            <tr><th>Place</th><td><span id="vPlace">-</span>  -  <span id="vWardno">-</span></td></tr>
+            <tr><th>District</th><td><span id="vDistrict">-</span></td></tr>
+            <tr><th>Post Office</th><td><span id="vPost">-</span>  -  <span id="vPincode">-</span></td></tr>
+
+            <tr><td colspan="2" class="pdf-sec-title">Nominee Details</td></tr>
+            <tr><th>Nominee Name</th><td><span id="vNominee">-</span></td></tr>
+            <tr><th>Relation</th><td><span id="vRelation">-</span></td></tr>
+            <tr><th>Mobile Number</th><td><span id="vNmobile">-</span></td></tr>
+
+            <tr><td colspan="2" class="pdf-sec-title">Bank Details</td></tr>
+            <tr><th>Bank Name</th><td><span id="vBankName">-</span></td></tr>
+            <tr><th>Account Holder</th><td><span id="vBankHolder">-</span></td></tr>
+            <tr><th>Account Number</th><td><span id="vBankAcc">-</span></td></tr>
+            <tr><th>IFSC Code</th><td><span id="vIfsc">-</span></td></tr>
+
+            <tr><td colspan="2" class="pdf-sec-title">KYC Details</td></tr>
+            <tr><th>ID Type</th><td><span id="vIdtype">-</span></td></tr>
+            <tr><th>ID No</th><td><span id="vIdno">-</span></td></tr>
+            <tr id="expiryRow"><th>Passport Expiry</th><td><span id="vPexpiry">-</span></td></tr>
+
+            <tr><td colspan="2" class="pdf-sec-title">Referral Details</td></tr>
+            <tr><th>Introducer Name</th><td><span id="vIntro">-</span></td></tr>
+            <tr><th>Introducer ID</th><td><span id="vIntroid">-</span></td></tr>
+
+
+
+          </table>
+        </div>
+      </div>
+      
+      <div class="action-buttons">
+        <button class="btn btn-edit" onclick="toggleEditMode(true)">Edit Profile</button>
+        <button class="btn btn-pdf" onclick="downloadProfilePDF()">Download PDF</button>
+      </div>
+    </div>
+
+    <div id="editMode" class="edit-mode">
+      <h2>Edit Profile Details</h2>
+      <form id="profileUpdateForm" onsubmit="event.preventDefault(); updateProfile();">
+        <div class="grid-row">
+          <label style="display:block; margin-bottom:5px; font-weight:bold;">Change Profile Photo:</label>
+          <input type="file" id="profPhotoInput" accept="image/*">
+  
+          <div class="form-group"><label>Mobile India</label><input type="text" id="profMobileInd" required></div>
+          <div class="form-group"><label>Mobile UAE</label><input type="text" id="profMobileUae" required></div>
+          <div class="form-group"><label>Email Address</label><input type="email" id="profEmail" required></div>
+          <div class="form-group"><label>Nominee Name</label><input type="text" id="profNomineeName" required></div>
+          <div class="form-group"><label>Nominee Relation</label><input type="text" id="profRelation" required></div>
+          <div class="form-group"><label>Nominee Mobile</label><input type="text" id="profNmobile" required></div>
+          <div class="form-group"><label>Bank Name</label><input type="text" id="profBankName" required></div>
+          <div class="form-group"><label>Account Holder Name</label><input type="text" id="profBankHolder" required></div>
+          <div class="form-group"><label>Account Number</label><input type="text" id="profBankAcc" required></div>
+          <div class="form-group"><label>IFSC Code</label><input type="text" id="profBankIfsc" required></div>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 25px;">
+          <button type="button" class="btn" style="background: #e2e8f0; color: #4a5568;" onclick="toggleEditMode(false)">Back</button>
+          <button type="submit" class="btn btn-pdf">Save Changes</button>
+        </div>
+      </form>
+    </div>
+    <!-- Save Overlay (Loading Screen) -->
+<div id="saveOverlay" class="custom-overlay">
+  <div class="spinner"></div>
+  <div class="overlay-text">പ്രൊഫൈൽ സേവ് ചെയ്യുന്നു... ദയവായി കാത്തിരിക്കുക.</div>
+</div>
+
+<!-- Custom Toast Notification -->
+<div id="toastNotification" class="toast-notification"></div>
+  </div>
+</div>
+
+
+<!-- Outstanding Loans Details Modal -->
+<div id="loanDetailsModal" style="display: none; position: fixed; z-index: 2500000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); font-family: 'Segoe UI', sans-serif;">
+  <div style="background-color: #fff; margin: 2vh auto; width: 95%; max-width: 600px; height: 90vh; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; overflow: hidden;">
+    
+    <!-- Modal Header (മുകളിലെ (X) ബട്ടൺ ഒഴിവാക്കിയിരിക്കുന്നു) -->
+    <div style="background-color: #355222; padding: 15px 20px; color: white;">
+      <h3 style="margin: 0; font-size: 15px;">Active Loans </h3>
+    </div>
+    
+    <!-- Modal Body (ലോൺ വിവരങ്ങൾ കാണിക്കുന്ന സ്ഥലം) -->
+    <div id="loanDetailsContent" style="padding: 15px; flex-grow: 1; overflow-y: auto; background-color: #f9f9f9;">
+      <p style="color: #666; text-align: center; margin-top: 20px;">വിവരങ്ങൾ ലോഡ് ചെയ്യുന്നു...</p>
+    </div>
+    
+    <!-- Modal Footer (താഴെയുള്ള Close ബട്ടൺ മാത്രം) -->
+    <div style="padding: 12px 20px; background: #f4f4f4; text-align: right; border-top: 1px solid #ddd;">
+      <button onclick="closeLoanModal()" style="background: #355222; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;">Close</button>
+    </div>
+    
+  </div>
+</div>
+
+
+  <script>
+    var currentUser = null;
+    var allMembersArray = [];
+    var eligibilityData = null;
+    var isGuarantorVerified = false;
+    var bankDataModified = false;
+    var originalBankInfo = {};
+    var verifiedGuarantorName = "";
+
+    function showAlert(message) {
+      document.getElementById("customAlertMessage").innerText = message;
+      document.getElementById("customAlertModal").style.display = "flex";
+    }
+
+    function closeCustomAlert() {
+      document.getElementById("customAlertModal").style.display = "none";
+    }
+
+    function showLoader(text) { document.getElementById("loaderText").innerText = text || "Loading..."; document.getElementById("loadingOverlay").style.display = "flex"; }
+    function hideLoader() { document.getElementById("loadingOverlay").style.display = "none"; }
+    function formatDateStr(dateStr) { if(!dateStr || dateStr.includes("No Active") || dateStr === "-") return dateStr; return dateStr.replace(/\//g, '-'); }
+
+
+
+    function login() {
+      var memberId = document.getElementById("memberId").value;
+      var loginKey = document.getElementById("loginKey").value;
+      var errorDiv = document.getElementById("loginError");
+      var closedBanner = document.getElementById("loginClosedBanner");
+      if(!memberId) { errorDiv.innerText = "Please enter ID and Key!"; errorDiv.style.display = "block"; return; }
+      errorDiv.style.display = "none"; closedBanner.style.display = "none";
+      showLoader("Logging in...");
+      google.script.run.withSuccessHandler(function(res) {
+        hideLoader();
+        if(res.success) {
+          if(res.accountPending) { closedBanner.innerHTML = "അംഗത്വം എടുത്ത് ആദ്യ പേയ്‌മെന്റ് ലഭിച്ചിട്ടില്ല"; closedBanner.style.display = "block"; return; }
+
+        if(res.accountClosed) { closedBanner.innerHTML = "Account Closed On " + formatDateStr(res.closedDate) + ""; closedBanner.style.display = "block"; return; }
+
+          if(res.accountInactive) { closedBanner.innerHTML = "5 മാസമായി ഇടപാടുകളൊന്നും നടത്തിയിട്ടില്ല നിങ്ങളുടെ Account Inactive ആണ്, ഇടപാടുകൾ നടത്തി Active ആക്കുക"; closedBanner.style.display = "block"; return; }
+
+          currentUser = res.user;
+
+          document.getElementById("loginOptionsHeader").style.display = "none";
+         
+          var gModal = document.getElementById("guarantorModal");
+          var notifications = res.guarantorNotifications || (res.user && res.user.guarantorNotifications);
+
+          if (notifications && notifications.length > 0) {
+            var notif = notifications[0];
+            var bName = notif.borrowerName || "മറ്റൊരു അംഗം";
+            var reqAmt = Number(notif.amount || 0).toLocaleString('en-IN');
+            var gAmt = notif.guarantorAmount ? Number(notif.guarantorAmount).toLocaleString('en-IN') : "0";
+           
+            document.getElementById("guarantorModalContent").innerHTML =
+              "<b>" + bName + "</b> നിങ്ങളെ ഒരു ലോണിന് ജാമ്യക്കാരനായി (Guarantor) ചേർത്തിട്ടുണ്ട്.<br><br>" +
+              "<b>ആവശ്യപ്പെട്ട തുക:</b> ₹" + reqAmt + "<br>" +
+              "<b>ജാമ്യം നിൽക്കുന്ന തുക:</b> ₹" + gAmt + "<br><br>" +
+              "നിങ്ങൾ ഇത് പൂർണ്ണമനസ്സോടെ സമ്മതിക്കുന്നുണ്ടോ? സമ്മതിക്കുന്നുവെങ്കിൽ 'Confirm & Sign' ക്ലിക്ക് ചെയ്യുക, അല്ലാത്തപക്ഷം 'Reject' ചെയ്യുക.";
+           
+            gModal.setAttribute("data-row", notif.rowIndex);
+            gModal.style.display = "flex";
+          } else {
+            gModal.style.display = "none";
+          }
+
+          document.getElementById("loginCard").style.display = "none";
+          document.getElementById("dashboard").style.display = "block";
+          document.getElementById("btnHeaderUpdateKey").style.display = "block";
+
+          document.getElementById("lblBankBalance").innerText = "₹ " + Number(res.user.bankTotalBalance || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+          document.getElementById("lblBankOutstanding").innerText = "₹ " + Number(res.user.bankOutstandingLoan || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+          document.getElementById("lblBankInterest").innerText = "₹ " + Number(res.user.bankNetInterest || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+          
+          document.getElementById("uName").innerText = res.user.name;
+          document.getElementById("uId").innerText = res.user.memberId;
+          var uStatEl = document.getElementById("uStatus");
+          uStatEl.innerText = res.user.status;
+          if(res.user.status === "Closed") { uStatEl.className = "p-status closed-badge"; } else { uStatEl.className = "p-status"; }
+          document.getElementById("btnGDrive").href = res.user.gDriveLink || "#";
+          setFormattedValue("uSavings", res.user.savings, false);
+          setFormattedValue("uAsset", res.user.netAsset, true);
+          setFormattedValue("uOtsy", res.user.otsyLoan, false, true);
+          setFormattedValue("uArrears", res.user.arrears, false, true);
+          if(Number(res.user.otsyLoan) > 0 && res.user.loanCloseDate !== "No Active Loan") {
+            document.getElementById("uLoanCloseRow").style.display = "block";
+            document.getElementById("uLoanClose").innerText = formatDateStr(res.user.loanCloseDate);
+          } else { document.getElementById("uLoanCloseRow").style.display = "none"; }
+          allMembersArray = res.otherMembers;
+          renderOtherMembers(res.otherMembers);
+        } else { errorDiv.innerText = res.message; errorDiv.style.display = "block"; }
+      }).withFailureHandler(function() { hideLoader(); }).checkLogin(memberId, loginKey);
+    }
+
+    function setFormattedValue(elementId, value, checkNegative, checkPositive) {
+      var num = Number(value) || 0;
+      var el = document.getElementById(elementId);
+      el.innerText = "₹ " + num.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      if(checkNegative && num < 0) { el.classList.add("text-red"); }
+      else if(checkPositive && num > 0) { el.classList.add("text-red"); }
+      else { el.classList.remove("text-red"); }
+    }
+
+    function renderOtherMembers(members) {
+      var container = document.getElementById("otherMembersList");
+      container.innerHTML = "";
+
+      // Sorting: Status "Closed" ആയവരെ ഏറ്റവും താഴേക്ക് മാറ്റുന്നു
+      members.sort(function(a, b) {
+        if (a.status === "Closed" && b.status !== "Closed") return 1;
+        if (a.status !== "Closed" && b.status === "Closed") return -1;
+        return 0;
+      });
+
+      members.forEach(function(m) {
+        if (currentUser && currentUser.memberId && m.id.toString().trim().toUpperCase() === currentUser.memberId.toString().trim().toUpperCase()) {
+          return;
+        }
+var card = document.createElement("div"); card.className = "member-summary-card";
+card.onclick = function() { toggleMemberExpand(this); };
+
+var isClosed = (m.status === "Closed");
+var isInactive = (m.status === "Inactive");
+
+// 1. Inactive ആണെങ്കിൽ 'm-status inactive' ക്ലാസ് വരും (കളർ മാറും)
+var statusClass = isClosed ? "m-status closed" : (isInactive ? "m-status inactive" : "m-status");
+
+var assetRedClass = (Number(m.netAsset) < 0) ? "text-red" : "";
+var otsyRedClass = (Number(m.otsyLoan) > 0) ? "text-red" : "";
+var arrearsRedClass = (Number(m.arrears) > 0) ? "text-red" : "";
+
+// 2. Closed അല്ലാത്ത ബാക്കി എല്ലാവർക്കും (Active & Inactive) ലോൺ ഡേറ്റ് പഴയതുപോലെ കാണിക്കും
+var showLoanRow = (Number(m.otsyLoan) > 0 && !isClosed && m.loanCloseDate !== "No Active Loan") ? "block" : "none";
+       
+        var innerHTMLStr = `<div class="m-title-row"><div><div class="m-name">${m.name}</div><div class="m-dist">${(m.place ? m.place + ', ' : '') + (m.district || 'N/A')}</div>
+        </div><div class="${statusClass}">${m.status || 'Active'}</div></div><div class="m-details-expand">`;
+        if(isClosed) {
+          innerHTMLStr += `<div class="inline-closed-msg">Account Closed On [${formatDateStr(m.closedDate)}]</div><button class="history-btn" onclick="event.stopPropagation(); openHistoryPopup('${m.id}')">History</button>`;
+        } else {
+          innerHTMLStr += `<div class="grid-2x2"><div class="grid-box"><div class="lbl">Savings</div><div class="val">₹ ${Number(m.savings).toLocaleString('en-IN', {minimumFractionDigits:2})}</div></div><div class="grid-box"><div class="lbl">Net Asset</div><div class="val ${assetRedClass}">₹ ${Number(m.netAsset).toLocaleString('en-IN', {minimumFractionDigits:2})}</div></div><div class="grid-box"><div class="lbl">Otsy Loan</div><div class="val ${otsyRedClass}">₹ ${Number(m.otsyLoan).toLocaleString('en-IN', {minimumFractionDigits:2})}</div></div><div class="grid-box"><div class="lbl">Arrears</div><div class="val ${arrearsRedClass}">₹ ${Number(m.arrears).toLocaleString('en-IN', {minimumFractionDigits:2})}</div></div></div><div class="long-box" style="display: ${showLoanRow};">Estimated Loan Closing Date: <span style="color:#e53e3e;">${formatDateStr(m.loanCloseDate)}</span></div><button class="history-btn" onclick="event.stopPropagation(); openHistoryPopup('${m.id}')">History</button>`;
+        }
+        innerHTMLStr += `</div>`;
+        card.innerHTML = innerHTMLStr;
+        container.appendChild(card);
+      });
+    }
+
+    function filterMembers() {
+      var query = document.getElementById("txtSearch").value.toLowerCase();
+      document.querySelectorAll(".member-summary-card").forEach(function(card) {
+        var txt = card.innerText.toLowerCase();
+        card.style.display = (txt.indexOf(query) > -1) ? "block" : "none";
+      });
+    }
+
+    function toggleMemberExpand(cardElement) {
+      var expandDiv = cardElement.querySelector(".m-details-expand");
+      var isVisible = expandDiv.style.display === "block";
+      document.querySelectorAll(".m-details-expand").forEach(function(el) { el.style.display = "none"; });
+      if (!isVisible) { expandDiv.style.display = "block"; }
+    }
+
+    function initiateLoanCheck() {
+      showLoader("അർഹത പരിശോധിക്കുന്നു...");
+      google.script.run.withSuccessHandler(function(res) {
+        hideLoader();
+        if(!res.eligible) {
+          if(res.isPending) {
+            showAlert("നിങ്ങളുടെ ലോൺ അപ്ലിക്കേഷൻ നിലവിൽ [" + res.status + "] ആണ്.\n\nAdmin വിവരണം: " + res.adminDesc);
+          } else {
+            var alertMsgEl = document.getElementById("customAlertMessage");
+            alertMsgEl.innerHTML = res.message;
+            if (res.allowReapply) {
+              alertMsgEl.innerHTML += `<br><br>
+                <button onclick="closeCustomAlert(); forceOpenLoanForm();" style="background: #38a169; color: white; padding: 10px; font-size: 14px; border: none; border-radius: 6px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px;">
+                  Apply New Loan (വീണ്ടും അപേക്ഷിക്കുക)
+                </button>`;
+            }
+            document.getElementById("customAlertModal").style.display = "flex";
+          }
+          return;
+        }
+        eligibilityData = res;
+        startLoanWizard();
+      }).withFailureHandler(function() { hideLoader(); }).checkLoanEligibility(currentUser.memberId);
+    }
+
+    function forceOpenLoanForm() {
+      showLoader("Opening Form...");
+      google.script.run.withSuccessHandler(function(res) {
+        hideLoader();
+        eligibilityData = res;
+        startLoanWizard();    
+      }).checkLoanEligibility(currentUser.memberId);
+    }
+
+    function startLoanWizard() {
+      document.getElementById("dashboard").style.display = "none";
+      document.getElementById("loanWizardCard").style.display = "block";
+      document.getElementById("wType").value = "";
+      document.getElementById("wTenure").value = "";
+      showStep(1);
+     
+      document.getElementById("wBankName").value = eligibilityData.bankName || "";
+      document.getElementById("wAccHolder").value = eligibilityData.accHolder || "";
+      document.getElementById("wAccNo").value = eligibilityData.accNo || "";
+      document.getElementById("wIfsc").value = eligibilityData.ifsc || "";
+     
+      originalBankInfo = {
+        bn: eligibilityData.bankName || "", ah: eligibilityData.accHolder || "",
+        an: eligibilityData.accNo || "", idx: eligibilityData.ifsc || ""
+      };
+      bankDataModified = false;
+    }
+
+    function showStep(stepNum) {
+      document.getElementById("wizTitle").innerText = "Loan Request (Step " + stepNum + " of 3)";
+      document.querySelectorAll(".wizard-step").forEach(function(s) { s.classList.remove("active"); });
+      document.getElementById("step" + stepNum).classList.add("active");
+    }
+
+    function goBackStep(stepNum) { showStep(stepNum); }
+    function exitWizard() { document.getElementById("loanWizardCard").style.display = "none"; document.getElementById("dashboard").style.display = "block"; }
+
+    function onLoanTypeChange() {
+      var type = document.getElementById("wType").value;
+      var tenureInput = document.getElementById("wTenure");
+      if(!type) { tenureInput.value = ""; return; }
+      if(type === "Special") { tenureInput.value = 18; } else { tenureInput.value = 12; }
+    }
+
+    function processStep1() {
+      var amount = Number(document.getElementById("wAmount").value);
+      var reqDate = document.getElementById("wReqDate").value;
+      var type = document.getElementById("wType").value;
+     
+      if(!type) { showAlert("ദയവായി ഒരു Loan Type തിരഞ്ഞെടുക്കുക!"); return; }
+      if(!amount || amount <= 0) { showAlert("ദയവായി സാധുവായ ഒരു തുക രേഖപ്പെടുത്തുക!"); return; }
+      if(!reqDate) { showAlert("തുക ആവശ്യപ്പെടുന്ന തീയതി രേഖപ്പെടുത്തുക!"); return; }
+
+      if(type === "Special" && amount < 100000) {
+        showAlert("Special Loan അനുവദിക്കുന്നത് 1 ലക്ഷം രൂപയോ അതിനു മുകളിലോ ഉള്ള തുകയ്ക്കാണ്. 1 ലക്ഷത്തിൽ താഴെയുള്ള തുകയ്ക്ക് ദയവായി Personal Loan തിരഞ്ഞെടുക്കുക.");
+        document.getElementById("wType").value = "Personal";
+        onLoanTypeChange();
+        return;
+      }
+     
+      var userSavings = Number(currentUser.savings) || 0;
+      var maxLimit = userSavings * 2;
+      if(maxLimit > 100000) maxLimit = 100000;
+
+      if(type !== "Special") {
+        if(amount > maxLimit) {
+          showAlert("നിങ്ങൾക്ക് അനുവദിക്കാവുന്ന പരമാവധി തുക. ₹ " + maxLimit.toLocaleString('en-IN') + ". കൂടുതൽ തുക അനുവദില്ല.");
+          document.getElementById("wAmount").value = maxLimit;
+          return;
+        }
+      } else {
+        if(amount > userSavings) {
+          showAlert("Special Loan അപേക്ഷകന്റെ നിലവിലെ സമ്പാദ്യ തുകയ്ക്ക് (₹" + userSavings.toLocaleString('en-IN') + ") തുല്യമായി മാത്രമേ അനുവദിക്കുകയുള്ളൂ. ഗ്രൂപ്പ് ചർച്ചകൾക്ക് ശേഷം മാത്രമേ ഇത് അഡ്മിൻ പാസ്സാക്കൂ.");
+          document.getElementById("wAmount").value = userSavings;
+          return;
+        }
+      }
+
+      var noticeBox = document.getElementById("guarantorNotice");
+      var gGroup = document.getElementById("guarantorFormGroup");
+     
+      if(eligibilityData.role === "Founder") {
+        noticeBox.innerText = "Founder ആയതിനാൽ നിങ്ങൾക്ക് ഈ ലോണിന് ജാമ്യക്കാരൻ (Guarantor) ആവശ്യമില്ല.";
+        gGroup.style.display = "none";
+        document.getElementById("wGuarantorId").value = "";
+        isGuarantorVerified = true;
+      }
+      else if(amount <= eligibilityData.savings) {
+        noticeBox.innerText = "നിങ്ങൾ ആവശ്യപ്പെട്ട തുക നിങ്ങളുടെ സമ്പാദ്യത്തേക്കാൾ (Savings) കുറവായതിനാൽ ഈ ലോണിന് ജാമ്യക്കാരൻ (Guarantor) ആവശ്യമില്ല.";
+        gGroup.style.display = "none";
+        document.getElementById("wGuarantorId").value = "";
+        isGuarantorVerified = true;
+      }
+      else {
+        var excess = amount - eligibilityData.savings;
+        noticeBox.innerText = "നിങ്ങളുടെ സമ്പാദ്യത്തേക്കാൾ ₹" + excess.toLocaleString('en-IN') + " കൂടുതൽ ആവശ്യപ്പെട്ടതിനാൽ ജാമ്യക്കാരൻ ആവശ്യമാണ്. ജാമ്യക്കാരന് നിലവിൽ ലോണോ കുടിശ്ശികയോ ഉണ്ടാകരുത്.";
+        gGroup.style.display = "block";
+        isGuarantorVerified = false;
+        document.getElementById("guarantorStatusText").innerText = "";
+      }
+     
+      showStep(2);
+    }
+
+    function verifyGuarantorBtn() {
+      var gId = document.getElementById("wGuarantorId").value.trim();
+      var amount = Number(document.getElementById("wAmount").value);
+      var excess = amount - eligibilityData.savings;
+      if(!gId) { showAlert("ജാമ്യക്കാരന്റെ ID ടൈപ്പ് ചെയ്യുക!"); return; }
+      if(gId.toUpperCase() === currentUser.memberId.toUpperCase()) { showAlert("നിങ്ങൾക്ക് സ്വയം ജാമ്യം നിൽക്കാൻ സാധിക്കില്ല!"); return; }
+     
+      showLoader("ജാമ്യക്കാരനെ പരിശോധിക്കുന്നു...");
+      google.script.run.withSuccessHandler(function(res) {
+        hideLoader();
+        var txt = document.getElementById("guarantorStatusText");
+        if(res.valid) {
+          txt.innerText = "Verified: " + res.name + " (ജാമ്യം നിൽക്കാൻ യോഗ്യനാണ്)";
+          txt.style.color = "green";
+          isGuarantorVerified = true;
+          verifiedGuarantorName = res.name;
+        } else {
+          txt.innerText = "Error: " + res.message;
+          txt.style.color = "red";
+          isGuarantorVerified = false;
+        }
+      }).withFailureHandler(function() { hideLoader(); }).validateGuarantor(gId, excess);
+    }
+
+    function processStep2() {
+      var type = document.getElementById("wType").value;
+      var tenure = Number(document.getElementById("wTenure").value);
+
+      if(!tenure || tenure <= 0) {
+        showAlert("ദയവായി ലോൺ കാലാവധി (Tenure) മാസങ്ങളിൽ രേഖപ്പെടുത്തുക!");
+        return;
+      }
+
+      if(type === "Personal" && tenure > 12) {
+        showAlert(type + " Loan-ന് പരമാവധി അനുവദിക്കുന്ന കാലാവധി 12 മാസമാണ്. ദയവായി 12-ഓ അതിൽ താഴെയോ തിരഞ്ഞെടുക്കുക.");
+        document.getElementById("wTenure").value = 12;
+        return;
+      }
+
+            if(type === "Emergency" && tenure > 6) {
+        showAlert(type + " Loan-ന് പരമാവധി അനുവദിക്കുന്ന കാലാവധി 6 മാസമാണ്. ദയവായി 6-ഓ അതിൽ താഴെയോ തിരഞ്ഞെടുക്കുക.");
+        document.getElementById("wTenure").value = 6;
+        return;
+      }
+
+
+      if(type === "Special" && tenure > 18) {
+        showAlert("Special Loan-ന് പരമാവധി അനുവദിക്കുന്ന കാലാവധി 18 മാസമാണ്. ദയവായി 18-ഓ അതിൽ താഴെയോ തിരഞ്ഞെടുക്കുക.");
+        document.getElementById("wTenure").value = 18;
+        return;
+      }
+
+      if(!isGuarantorVerified) {
+        showAlert("ദയവായി ജാമ്യക്കാരനെ വേരിഫൈ ചെയ്യുക!");
+        return;
+      }
+     
+      showStep(3);
+    }
+
+    function enableBankEdit() {
+      document.getElementById("wBankName").disabled = false;
+      document.getElementById("wAccHolder").disabled = false;
+      document.getElementById("wAccNo").disabled = false;
+      document.getElementById("wIfsc").disabled = false;
+      document.getElementById("bankViewButtons").style.display = "none";
+      document.getElementById("bankEditButtons").style.display = "flex";
+      bankDataModified = true;
+    }
+
+    function cancelBankEdit() {
+      document.getElementById("wBankName").value = originalBankInfo.bn;
+      document.getElementById("wAccHolder").value = originalBankInfo.ah;
+      document.getElementById("wAccNo").value = originalBankInfo.an;
+      document.getElementById("wIfsc").value = originalBankInfo.idx;
+     
+      document.getElementById("wBankName").disabled = true;
+      document.getElementById("wAccHolder").disabled = true;
+      document.getElementById("wAccNo").disabled = true;
+      document.getElementById("wIfsc").disabled = true;
+      document.getElementById("bankViewButtons").style.display = "flex";
+      document.getElementById("bankEditButtons").style.display = "none";
+      bankDataModified = false;
+    }
+
+    function finalSubmitLoan() {
+      var origDate = document.getElementById("wReqDate").value;
+      var formattedJSDate = "-";
+     
+      if (origDate) {
+        var dateParts = origDate.split("-");
+        if (dateParts.length === 3) {
+          formattedJSDate = dateParts[2] + "-" + dateParts[1] + "-" + dateParts[0];
+        }
+      }
+
+      var dataRow = {
+        memberId: currentUser.memberId,
+        loanType: document.getElementById("wType").value,
+        amount: document.getElementById("wAmount").value,
+        reqDate: origDate,
+        guarantorId: document.getElementById("wGuarantorId").value,
+        tenure: document.getElementById("wTenure").value,
+        isBankEdited: bankDataModified,
+        bankName: document.getElementById("wBankName").value,
+        accHolder: document.getElementById("wAccHolder").value,
+        accNo: document.getElementById("wAccNo").value,
+        ifsc: document.getElementById("wIfsc").value
+      };
+
+      showLoader("അപേക്ഷ സമർപ്പിക്കുന്നു...");
+      google.script.run.withSuccessHandler(function(res) {
+        hideLoader();
+        if(res.success) {
+          document.getElementById("loanWizardCard").style.display = "none";
+          document.getElementById("loanResultCard").style.display = "block";
+         
+          document.getElementById("resStatusMsg").innerText = res.statusMsg;
+          document.getElementById("resAppNo").innerText = res.appNo;
+          document.getElementById("resDate").innerText = res.date;
+          document.getElementById("resBankName").innerText = document.getElementById("wBankName").value || "-";
+          document.getElementById("resAccNo").innerText = document.getElementById("wAccNo").value || "-";
+         
+          document.getElementById("pAppNo").innerText = res.appNo;
+          document.getElementById("pDate").innerText = res.date;
+          document.getElementById("pId").innerText = dataRow.memberId;
+          document.getElementById("pName").innerText = currentUser.name;
+          document.getElementById("pType").innerText = dataRow.loanType;
+          document.getElementById("pAmount").innerText = "₹ " + Number(dataRow.amount).toLocaleString('en-IN');
+          document.getElementById("pTenure").innerText = dataRow.tenure + " Months";
+         
+          document.getElementById("pReqDate").innerText = formattedJSDate;
+         
+          var reasonElem = document.getElementById("wReason") || document.getElementById("loanReason");
+          document.getElementById("pReason").innerText = reasonElem ? reasonElem.value : "-";
+         
+          if(dataRow.amount > 0) {
+            var emiCalc = Math.round(Number(dataRow.amount) / Number(dataRow.tenure));
+            document.getElementById("pEmi").innerText = "₹ " + emiCalc.toLocaleString('en-IN') + " / Month (Approx)";
+          } else {
+            document.getElementById("pEmi").innerText = "-";
+          }
+         
+          var gId = dataRow.guarantorId;
+          if (gId && gId !== "-") {
+            if (typeof verifiedGuarantorName !== 'undefined' && verifiedGuarantorName) {
+              document.getElementById("pGuarantor").innerText = gId + " - " + verifiedGuarantorName;
+            } else {
+              document.getElementById("pGuarantor").innerText = gId;
+            }
+          } else {
+            document.getElementById("pGuarantor").innerText = "Not Required / No Active Guarantor";
+          }
+         
+          var bName = document.getElementById("wBankName").value || "-";
+          var aNo = document.getElementById("wAccNo").value || "-";
+          var ifscCode = document.getElementById("wIfsc") ? document.getElementById("wIfsc").value : "";
+          var accHolder = (currentUser && currentUser.name) ? currentUser.name : "-";
+         
+          document.getElementById("pBank").innerText = "Bank Name: " + bName +
+                                                       "\nAcc Holder: " + accHolder +
+                                                       "\nAccount No: " + aNo +
+                                                       (ifscCode ? "\nIFSC: " + ifscCode : "");
+         
+          document.getElementById("pStatusMessage").innerText = res.statusMsg;
+        }
+      }).withFailureHandler(function() { hideLoader(); }).submitLoanApplication(dataRow);
+    }
+
+    function downloadApplicationPDF() {
+      var element = document.getElementById('pdfPrintArea');
+      element.style.display = "block";
+
+      var appNo = document.getElementById('pAppNo').innerText;
+      var opt = {
+        margin:       10,
+        filename:     'Loan_Application_' + appNo + '.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+     
+      html2pdf().set(opt).from(element).save().then(function() {
+        element.style.display = "none";
+      });
+    }
+
+    function returnToDashboardFromLoan() {
+      document.getElementById("loanResultCard").style.display = "none";
+      if(document.getElementById("wAmount")) document.getElementById("wAmount").value = "";
+      if(document.getElementById("wReqDate")) document.getElementById("wReqDate").value = "";
+      if(document.getElementById("wGuarantorId")) document.getElementById("wGuarantorId").value = "";
+      if(document.getElementById("wReason")) document.getElementById("wReason").value = "";
+     
+      verifiedGuarantorName = "";
+      isGuarantorVerified = false;
+
+      var mainDashboard = document.getElementById("dashboard");
+      if(mainDashboard) { mainDashboard.style.display = "block"; }
+    }
+
+    function openHistoryPopup(memberId) {
+      var id = memberId || currentUser.memberId;
+      showLoader("Fetching History...");
+      document.getElementById("historyModal").style.display = "flex";
+      var listDiv = document.getElementById("historyList"); listDiv.innerHTML = "Loading History...";
+      google.script.run.withSuccessHandler(function(history) {
+        hideLoader();
+        if(history.length === 0) { listDiv.innerHTML = "No transactions found."; return; }
+        listDiv.innerHTML = "";
+        history.forEach(function(h) {
+          var catStr = h.category.toString().trim();
+          var isRedCategory = (catStr === "Loan Issued" || catStr === "Account Closed");
+          var badgeClass = isRedCategory ? "hist-cat cat-red" : "hist-cat";
+          var amountClass = isRedCategory ? "hist-amt amt-red" : "hist-amt";
+          listDiv.innerHTML += `<div class="hist-item"><div class="hist-left"><span class="hist-date">${formatDateStr(h.date)}</span><span class="${badgeClass}">${h.category}</span></div><b class="${amountClass}">₹ ${Number(h.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</b></div>`;
+        });
+      }).withFailureHandler(function() { hideLoader(); }).getTransactionHistory(id);
+    }
+
+    function closeHistoryPopup() { document.getElementById("historyModal").style.display = "none"; }
+    function openUpdateKeyModal() { document.getElementById("updateKeyModal").style.display = "flex"; }
+    function closeUpdateKeyModal() { document.getElementById("updateKeyModal").style.display = "none"; }
+   
+    function submitNewKey() {
+      var newKey = document.getElementById("txtNewKey").value;
+      if(!newKey) { showAlert("Please enter a new key!"); return; }
+      showLoader("Updating Login Key...");
+      google.script.run.withSuccessHandler(function(res) {
+        hideLoader();
+        if(res.success) {
+          showAlert("Login Key Updated!");
+          closeUpdateKeyModal();
+          document.getElementById("txtNewKey").value = "";
+        } else { showAlert("Error: " + res.message); }
+      }).withFailureHandler(function(err) {
+        hideLoader();
+        showAlert("System Error: " + err);
+      }).updateMemberLoginKey(currentUser.memberId, newKey);
+    }
+
+    var pendingGuarantorAction = null;
+
+    function submitGuarantorResponse(action) {
+      var gModal = document.getElementById("guarantorModal");
+      var rowIndex = gModal.getAttribute("data-row");
+      pendingGuarantorAction = { rowIndex: rowIndex, action: action };
+     
+      var confirmMsg = (action === 'Approve') ?
+        "നിങ്ങൾ ഈ ലോണിന് ജാമ്യം നിൽക്കാൻ പൂർണ്ണമായി സമ്മതിക്കുന്നുണ്ടോ?" :
+        "ഈ ജാമ്യാപേക്ഷ നിരസിക്കാൻ ആഗ്രഹിക്കുന്നുണ്ടോ?";
+       
+      document.getElementById("customConfirmMessage").innerText = confirmMsg;
+      document.getElementById("customConfirmModal").style.display = "flex";
+    }
+
+    function closeCustomConfirm(isConfirmed) {
+      document.getElementById("customConfirmModal").style.display = "none";
+      if (!isConfirmed || !pendingGuarantorAction) return;
+     
+      var gModal = document.getElementById("guarantorModal");
+      showLoader("Updating Response...");
+      google.script.run.withSuccessHandler(function(res) {
+        hideLoader();
+        if(res.success) {
+          showAlert("നിങ്ങളുടെ മറുപടി രേഖപ്പെടുത്തിയിരിക്കുന്നു!");
+          gModal.style.display = "none";
+          login();
+        } else { showAlert("Error: " + res.message); }
+      }).withFailureHandler(function(err) {
+        hideLoader();
+        showAlert("System Error: " + err);
+      }).respondAsGuarantor(pendingGuarantorAction.rowIndex, pendingGuarantorAction.action);
+    }
+
+    function openByelawModal() {
+      document.getElementById("byelawPopup").style.display = "block";
+      document.getElementById("byelawContent").innerHTML = '<p style="text-align: center; margin-top: 20px; color: #666;">ലോഡ് ചെയ്യുന്നു... ദയവായി കാത്തിരിക്കുക...</p>';
+     
+      google.script.run.withSuccessHandler(function(htmlText) {
+        document.getElementById("byelawContent").innerHTML = htmlText;
+      }).getByelawContent();
+    }
+
+    /* തിരുത്തിയ closeByelawModal ഫങ്ക്ഷൻ - HTML റീസെറ്റ് ചെയ്യും */
+    function closeByelawModal() {
+      document.getElementById("byelawPopup").style.display = "none";
+      document.getElementById("byelawContent").innerHTML = "";
+    }
+
+function openRegistrationModal() {
+  document.getElementById("registrationPopup").style.display = "block";
+  document.getElementById("registrationContent").innerHTML = '<p style="text-align: center; margin-top: 50px;">സ്റ്റാറ്റസ് പരിശോധിക്കുന്നു...</p>';
+ 
+  // ആദ്യം ഷീറ്റിലെ Configuration സ്റ്റാറ്റസ് പരിശോധിക്കുന്നു
+  google.script.run.withSuccessHandler(function(statusData) {
+    if (statusData.isActive) {
+      // സ്റ്റാറ്റസ് Active ആണെങ്കിൽ ഫോം ലോഡ് ചെയ്യും
+      document.getElementById("registrationContent").innerHTML = '<p style="text-align: center; margin-top: 50px;">ഫോം ലോഡ് ചെയ്യുന്നു...</p>';
+      google.script.run.withSuccessHandler(function(htmlText) {
+        document.getElementById("registrationContent").innerHTML = htmlText;
+      }).getRegistrationContent();
+    } else {
+      // സ്റ്റാറ്റസ് Active അല്ലെങ്കിൽ (ഉദാഹരണത്തിന് Closed ആണെങ്കിൽ) F2-ൽ കൊടുത്ത മെസ്സേജ് കാണിക്കും
+      document.getElementById("registrationContent").innerHTML = 
+        '<div style="text-align: center; margin-top: 100px; padding: 20px;">' +
+        '<h3 style="color: #d32f2f;">Registration is Currently Closed</h3>' +
+        '<p style="font-size: 16px; color: #333; margin-top: 15px;">' + statusData.message + '</p>' +
+        '</div>';
+    }
+  }).checkRegistrationStatus();
+}
+
+function closeRegistrationModal() {
+  document.getElementById("registrationPopup").style.display = "none";
+  document.getElementById("registrationContent").innerHTML = "";
+}
+  </script>
+
+<script>
+    function togglePassportField() {
+      var idType = document.getElementById("idType").value;
+      var expiryGroup = document.getElementById("passportExpiryGroup");
+      var expiryInput = document.getElementById("passportExpiry");
+      
+      if(idType === "Passport") {
+        expiryGroup.style.display = "block";
+        expiryInput.required = true;
+      } else {
+        expiryGroup.style.display = "none";
+        expiryInput.required = false;
+        expiryInput.value = "";
+      }
+    }
+
+    function toggleSubmitBtn() {
+      var checkBox = document.getElementById("byelawCheck");
+      var submitBtn = document.getElementById("submitBtn");
+      submitBtn.disabled = !checkBox.checked;
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        if (!file) resolve("");
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+      });
+    }
+
+    async function submitForm(e) {
+      if(e) e.preventDefault(); // Navigation തടയാൻ
+      document.getElementById("loading").style.display = "flex";
+      
+      try {
+        var pFile = document.getElementById("photoFile").files[0];
+        var dFile = document.getElementById("docFile").files[0];
+        var sFile = document.getElementById("signFile").files[0];
+        
+        var payload = {
+          name: document.getElementById("name").value,
+          dob: document.getElementById("dob").value,
+          email: document.getElementById("email").value,
+          mobileUae: document.getElementById("mobileUae").value,
+          mobileIndia: document.getElementById("mobileIndia").value,
+          houseName: document.getElementById("houseName").value,
+          place: document.getElementById("place").value,
+          district: document.getElementById("district").value,
+          wardNo: document.getElementById("wardNo").value,
+          postOffice: document.getElementById("postOffice").value,
+          pinCode: document.getElementById("pinCode").value,
+          introName: document.getElementById("introName").value,
+          introId: document.getElementById("introId").value,
+          nomineeName: document.getElementById("nomineeName").value,
+          nomineeRelation: document.getElementById("nomineeRelation").value,
+          nomineeMobile: document.getElementById("nomineeMobile").value,
+          idType: document.getElementById("idType").value,
+          idNumber: document.getElementById("idNumber").value,
+          passportExpiry: document.getElementById("passportExpiry").value,
+          bankName: document.getElementById("bankName").value,
+          bankHolder: document.getElementById("bankHolder").value,
+          bankAccNo: document.getElementById("bankAccNo").value,
+          bankIfsc: document.getElementById("bankIfsc").value,
+          photoBase64: await fileToBase64(pFile),
+          docBase64: await fileToBase64(dFile),
+          signBase64: await fileToBase64(sFile)
+        };
+
+        google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onFail).handleUserRegistration(payload);
+        
+      } catch(err) {
+        alert("ഫയൽ പ്രോസസ്സ് ചെയ്യുന്നതിൽ തകരാർ: " + err);
+        document.getElementById("loading").style.display = "none";
+      }
+      return false; 
+    }
+
+    function onSuccess(res) {
+      document.getElementById("loading").style.display = "none";
+      if(res.success) {
+        document.getElementById("popMemberId").innerText = res.memberId;
+        document.getElementById("popLoginKey").innerText = res.loginKey;
+        document.getElementById("successModal").style.display = "flex";
+        document.getElementById("regForm").reset();
+        toggleSubmitBtn();
+      } else {
+        alert("രജിസ്ട്രേഷൻ പരാജയപ്പെട്ടു: " + res.error);
+      }
+    }
+
+    function onFail(err) {
+      document.getElementById("loading").style.display = "none";
+      alert("സർവർ പ്രശ്നം ഉണ്ടായതിനാൽ രജിസ്ട്രേഷൻ നടന്നില്ല: " + err);
+    }
+
+    function closePopup() {
+      document.getElementById("successModal").style.display = "none";
+    }
+
+function openProfile() {
+  var memberId = (currentUser && currentUser.memberId) ? currentUser.memberId : document.getElementById("memberId").value;
+  if(!memberId) return;
+
+  showLoader("Loading Profile..."); 
+  toggleEditMode(false); 
+  
+  google.script.run.withSuccessHandler(function(userData) {
+    hideLoader();
+    if(userData) {
+      // 1. പ്രിന്റ് ടേബിളിലേക്ക് ഡാറ്റ നൽകുന്നു
+      document.getElementById("vName").innerText = userData.name || "";
+      document.getElementById("vId").innerText = memberId;
+      document.getElementById("vJoinDate").innerText = userData.joinDate || "-";
+      document.getElementById("vDob").innerText = userData.dob || "Not Provided";
+      document.getElementById("vMobileind").innerText = userData.mobileInd || "";
+      document.getElementById("vMobileuae").innerText = userData.mobileUae || "";
+      document.getElementById("vEmail").innerText = userData.email || "";
+      document.getElementById("vHouse").innerText = userData.houseName || "";
+      document.getElementById("vPlace").innerText = userData.place || "";
+      document.getElementById("vDistrict").innerText = userData.district || "";
+      document.getElementById("vWardno").innerText = userData.wardNo || "";
+      document.getElementById("vPost").innerText = userData.postOffice || "";
+      document.getElementById("vPincode").innerText = userData.pinCode || "";
+      document.getElementById("vIntro").innerText = userData.introName || "";
+      document.getElementById("vIntroid").innerText = userData.introId || "";
+      document.getElementById("vNominee").innerText = userData.nomineeName || "";
+      document.getElementById("vRelation").innerText = userData.relation || "";
+      document.getElementById("vNmobile").innerText = userData.nMobile || "";
+      document.getElementById("vIdtype").innerText = userData.idType || "";
+      document.getElementById("vIdno").innerText = userData.idNo || "";
+      document.getElementById("vPexpiry").innerText = userData.pExpiry || "";
+      document.getElementById("vBankName").innerText = userData.bankName || "";
+      document.getElementById("vBankHolder").innerText = userData.bankHolder || "";
+      document.getElementById("vBankAcc").innerText = userData.bankAcc || "";
+      document.getElementById("vIfsc").innerText = userData.bankIfsc || "";
+      
+      // ലോക്ക് മാറ്റിച്ച ഫോട്ടോ സെറ്റ് ചെയ്യുന്നു
+      document.getElementById("vPhoto").src = userData.photoUrl || "https://via.placeholder.com/150";
+
+      // 2. എഡിറ്റ് ഫോമിലേക്ക് ഡാറ്റ നൽകുന്നു
+      document.getElementById("profMobileInd").value = userData.mobileInd || "";
+      document.getElementById("profMobileUae").value = userData.mobileUae || "";
+      document.getElementById("profEmail").value = userData.email || "";
+      document.getElementById("profNomineeName").value = userData.nomineeName || "";
+      document.getElementById("profRelation").value = userData.relation || "";
+      document.getElementById("profNmobile").value = userData.nMobile || "";
+      document.getElementById("profBankName").value = userData.bankName || "";
+      document.getElementById("profBankHolder").value = userData.bankHolder || "";
+      document.getElementById("profBankAcc").value = userData.bankAcc || "";
+      document.getElementById("profBankIfsc").value = userData.bankIfsc || "";
+      
+      // തിരുത്തിയ ഭാഗം: ഇവിടെ .style.display എന്ന് കൃത്യമാക്കിയിട്ടുണ്ട്
+      var expiryRow = document.getElementById("expiryRow");
+      if (expiryRow) {
+        if (userData.idType && userData.idType.toString().trim().toLowerCase() === "passport") {
+          expiryRow.style.display = ""; // കാണിക്കുക
+        } else {
+          expiryRow.style.display = "none"; // മറയ്ക്കുക
+        }
+      }
+
+      // പോപ്പ്-അപ്പ് തുറക്കുമ്പോൾ മെയിൻ പേജ് ലോക്ക് ചെയ്യുന്നു
+      document.getElementById("profileModal").style.display = "flex";
+      document.body.style.overflow = "hidden"; 
+    }
+  }).getMemberProfile(memberId);
+}
+
+function toggleEditMode(showEdit) {
+  if(showEdit) {
+    document.getElementById("viewMode").style.display = "none";
+    document.getElementById("editMode").style.display = "block";
+  } else {
+    document.getElementById("editMode").style.display = "none";
+    document.getElementById("viewMode").style.display = "block";
+  }
+}
+
+function closeProfile() {
+  document.getElementById("profileModal").style.display = "none";
+  // പോപ്പ്-അപ്പ് ക്ലോസ് ചെയ്യുമ്പോൾ മെയിൻ പേജ് സ്ക്രോളിങ് തിരികെ നൽകുന്നു
+  document.body.style.overflow = "auto"; 
+}
+
+function downloadProfilePDF() {
+  var element = document.getElementById('profilePdfPrintArea'); 
+  
+  if (!element) {
+    alert("Error: Profile Print area not found!");
+    return;
+  }
+
+  var memberId = document.getElementById("memberId").value;
+  
+  var opt = {
+    margin:       10,
+    filename:     'Safe Hand_Profile_' + memberId + '.pdf',
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0 }, 
+    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+  
+  html2pdf().set(opt).from(element).save();
+}
+
+
+
+// വിവരങ്ങൾ സേവ് ചെയ്യാനുള്ള ഫങ്ക്ഷൻ
+function updateProfile() {
+  var updatedData = {
+    id: document.getElementById("memberId").value,
+    mobileInd: document.getElementById("profMobileInd").value,
+    mobileUae: document.getElementById("profMobileUae").value,
+    email: document.getElementById("profEmail").value,
+    nomineeName: document.getElementById("profNomineeName").value,
+    relation: document.getElementById("profRelation").value,
+    nMobile: document.getElementById("profNmobile").value,
+    bankName: document.getElementById("profBankName").value,
+    bankHolder: document.getElementById("profBankHolder").value,
+    bankAcc: document.getElementById("profBankAcc").value,
+    bankIfsc: document.getElementById("profBankIfsc").value,
+    photoData: null, 
+    photoName: ""
+  };
+
+  // ഫോട്ടോ അപ്‌ലോഡ് ചെയ്യാൻ ഫയൽ സെലക്ട് ചെയ്തിട്ടുണ്ടോ എന്ന് നോക്കുന്നു
+  var fileInput = document.getElementById("profPhotoInput");
+  
+  if (fileInput && fileInput.files.length > 0) {
+    var file = fileInput.files[0];
+    var reader = new FileReader();
+    
+    // ലോഡിങ് ഓവർലേ കാണിക്കുന്നു
+    document.getElementById("saveOverlay").style.display = "flex";
+    
+    reader.onload = function(e) {
+      // ഫോട്ടോ ബൈനറി ഡാറ്റ ബേസ്64 (Base64) ഫോർമാറ്റിലേക്ക് മാറ്റുന്നു
+      updatedData.photoData = e.target.result.split(',')[1];
+      updatedData.photoName = file.name;
+      
+      // ഫോട്ടോ ഉൾപ്പെടെ ഡാറ്റ സേവ് ചെയ്യാൻ അയക്കുന്നു
+      sendDataToServer(updatedData);
+    };
+    reader.readAsDataURL(file);
+  } else {
+    // ഫോട്ടോ മാറ്റിയിട്ടില്ലെങ്കിൽ സാധാരണ പോലെ ഡാറ്റ അയക്കുന്നു
+    document.getElementById("saveOverlay").style.display = "flex";
+    sendDataToServer(updatedData);
+  }
+}
+
+// സെർവറിലേക്ക് ഡാറ്റ അയക്കുന്ന ഉപ-ഫങ്ക്ഷൻ
+// സെർവറിലേക്ക് ഡാറ്റ അയക്കുന്ന ഉപ-ഫങ്ക്ഷൻ
+function sendDataToServer(data) {
+  google.script.run
+    .withSuccessHandler(function(response) {
+      // 2. സേവ് ആയിക്കഴിഞ്ഞാൽ ഓവർലേ മറയ്ക്കുക
+      document.getElementById("saveOverlay").style.display = "none";
+      
+      if(response.success) {
+        // 3. പഴയ alert() ന് പകരം പുതിയ നോട്ടിഫിക്കേഷൻ സ്റ്റൈൽ
+        showToast("Profile updated successfully!", "success");
+        
+        // എഡിറ്റ് മോഡ് ക്ലോസ് ചെയ്ത് വ്യൂ മോഡിലേക്ക് തിരികെ വരാൻ
+        toggleEditMode(false); 
+        
+        openProfile(); // പുതിയ വിവരങ്ങളോടെ വ്യൂ സ്ക്രീൻ പുതുക്കുന്നു
+        
+        // ഫയൽ ഇൻപുട്ട് റീസെറ്റ് ചെയ്യാൻ (ഓപ്ഷണൽ)
+        if(document.getElementById("profPhotoInput")) {
+          document.getElementById("profPhotoInput").value = "";
+        }
+      } else {
+        // എറർ മെസ്സേജും നോട്ടിഫിക്കേഷൻ ആയി കാണിക്കുന്നു
+        showToast("Error: " + response.message, "error");
+      }
+    })
+    .withFailureHandler(function(error) {
+       // എന്തെങ്കിലും സെർവർ എറർ വന്നാലും ഓവർലേ മറയ്ക്കണം
+       document.getElementById("saveOverlay").style.display = "none";
+       showToast("Server Error: " + error.message, "error");
+    })
+    .saveMemberProfile(data); // മാറ്റം വരുത്തിയത് ഇവിടെയാണ് (updatedData എന്നതിന് പകരം data)
+}
+
+function showToast(message, type) {
+  var toast = document.getElementById("toastNotification");
+  toast.innerText = message;
+  
+  // എറർ ആണെങ്കിൽ ചുവപ്പ് നിറം വരാൻ 
+  if(type === "error") {
+    toast.classList.add("toast-error");
+  } else {
+    toast.classList.remove("toast-error");
+  }
+
+  // നോട്ടിഫിക്കേഷൻ കാണിക്കുന്നു
+  toast.classList.add("show");
+
+  // 3 സെക്കൻഡിനു ശേഷം തനിയെ മറഞ്ഞു പോകാൻ
+  setTimeout(function(){ 
+    toast.classList.remove("show"); 
+  }, 3000);
+}
+
+function openLoanDetailsModal() {
+  document.getElementById('loanDetailsModal').style.display = 'flex';
+  document.getElementById('loanDetailsContent').innerHTML = '<p style="text-align:center; color:#666; margin-top:20px;">ഡാറ്റ പരിശോധിക്കുന്നു...</p>';
+
+  google.script.run
+    .withSuccessHandler(function(loans) {
+      var html = '<table style="width:100%; border-collapse: collapse; font-size: 13px; background:#fff; border-radius:6px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.1);">';
+      html += '<tr style="background:#e2ebd9; color:#355222;"><th style="padding:10px; text-align:left;"> Name & ID</th><th style="padding:10px; text-align:right;">Loan Taken</th><th style="padding:10px; text-align:right;">Balance Amount</th></tr>';
+      
+      if(loans && loans.length > 0) {
+        loans.forEach(function(l) {
+          html += '<tr style="border-bottom:1px solid #eee;">';
+          html += '<td style="padding:10px; font-weight:600;">' + l.name + '<br><small style="color:#777;">ID: ' + l.memberId + '</small></td>';
+          html += '<td style="padding:10px; text-align:right; font-weight:500; color:#333;">₹ ' + l.loanTaken + '</td>';
+          html += '<td style="padding:10px; text-align:right; font-weight:bold; color:#c0392b;">₹ ' + l.amount + '</td>';
+          html += '</tr>';
+        });
+      } else {
+        html += '<tr><td colspan="3" style="padding:20px; text-align:center; color:#666;">നിലവിൽ ആക്ടീവ് ലോണുകൾ ഒന്നും കണ്ടെത്തിയില്ല.</td></tr>';
+      }
+      html += '</table>';
+      
+      document.getElementById('loanDetailsContent').innerHTML = html;
+    })
+    .withFailureHandler(function(error) {
+      document.getElementById('loanDetailsContent').innerHTML = '<p style="color:red; text-align:center; margin-top:20px;">വിവരങ്ങൾ ലോഡ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു.</p>';
+    })
+    .getActiveLoansList();
+}
+
+function closeLoanModal() {
+  document.getElementById('loanDetailsModal').style.display = 'none';
+}
+
+</script>
 </body>
 </html>
